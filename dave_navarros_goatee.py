@@ -232,7 +232,7 @@ def main():
     for root, dirs, files in os.walk(path):
         for filename in files:
             f = os.path.join(root, filename)
-            if should_analyze(f):
+            if should_analyze(f) and len(HASHLIST):
                 analyze(f)
 
     print
