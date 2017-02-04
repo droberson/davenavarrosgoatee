@@ -82,14 +82,13 @@ def analyze(filename):
         for word in wordlist:
             if len(word) < MINLENGTH:
                 continue
-            for user in HASHLIST:
+            for user in HASHLIST.keys():
                 crypted = crypt.crypt(word, HASHLIST[user])
-                if crypted == HASHLIST[user] and HASHLIST[user] != "__deleted":
-                    HASHLIST[user] = "__deleted"
+                if crypted == HASHLIST[user]:
+                    del HASHLIST[user]
                     print "[*] Found password for "+user+": "+word+" in "+filename
                     continue
             count += 1
-            # TODO further dedupe this list using Jon's scoring method
             # TODO more hash types
     print "[-] "+str(count)+" words attempted from "+filename
     filep.close()
@@ -100,7 +99,7 @@ def mutate(buf):
     wordlist = []
 
     tmpstr = ''
-    wordlist.append(buf)
+    wordlist.append(buf) # add line itself
     for character in buf: # left to right
         tmpstr += character
         wordlist.append(tmpstr)
