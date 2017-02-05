@@ -75,11 +75,16 @@ def analyze(filename):
     count = 0
     wordlist = []
     filep = open(filename, 'r')
+    print "[-] Analyzing "+filename
     for line in filep:
+        if len(HASHLIST.keys()) == 0:
+            break
         if shannon_entropy(line.rstrip('\r\n'), ALLCHARS) < ENTROPY:
             continue
         wordlist = mutate(line.rstrip('\r\n'))
         for word in wordlist:
+            if len(HASHLIST.keys()) == 0:
+                break
             if len(word) < MINLENGTH:
                 continue
             for user in HASHLIST.keys():
