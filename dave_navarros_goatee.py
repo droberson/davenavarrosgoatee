@@ -19,6 +19,7 @@ TODO:
 - add charset to use with analyze()
 - clean up print statements
 - different pattern for open()
+- flag to generate wordlist only
 - add license
 """
 
