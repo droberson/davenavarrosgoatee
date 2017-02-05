@@ -17,9 +17,9 @@ TODO:
 - add left->right, right->left function
 - LRU cache to minimize duplicate password attempts
 - add charset to use with analyze()
-- clean up print statements
 - different pattern for open()
 - flag to generate wordlist only
+- check if -p exists
 """
 
 """
@@ -56,8 +56,8 @@ import crypt
 
 # Globals
 HASHLIST = {}
-ENTROPY = 2.0
-MINLENGTH = 6
+ENTROPY = 2.0 # minimum entropy
+MINLENGTH = 6 # minimum password length
 
 # Constants
 ALPHAONLY = string.ascii_letters
@@ -126,12 +126,13 @@ def analyze(filename):
                 crypted = crypt.crypt(word, HASHLIST[user])
                 if crypted == HASHLIST[user]:
                     del HASHLIST[user]
-                    print "[*] Found password for %s: %s+ in %s" % \
+                    print "[*] Found password for %s: %s in %s" % \
                         (user, word, os.path.abspath(filename))
                     continue
             count += 1
     print "[-] %s words attempted from %s" % \
         (str(count), os.path.abspath(filename))
+    print
     filep.close()
 
 
@@ -195,23 +196,28 @@ def populate_hashes(hashfile):
     try:
         hashp = open(hashfile, 'r')
     except Exception, err:
-        print "[-] Could not open hashfile: "+str(err)
+        print "[-] Could not open hashfile: %s" % (str(err))
         sys.exit(os.EX_USAGE)
 
-    print "[+] Populating hash list from "+hashfile
+    print "[+] Populating hash list from %s" % (hashfile)
 
     for line in hashp:
         tmp = line.split(':')
 
-        if len(tmp) < 2 or tmp[0].rstrip('\r\n') == '' or tmp[1].strip('\r\n') == '':
-            print "[-] Skipping "+line.rstrip('\r\n')+" due to missing fields"
+        # remove carriage returns and newlines
+        tmp[0] = tmp[0].rstrip('\r\n')
+        tmp[1] = tmp[1].rstrip('\r\n')
+        line = line.rstrip('\r\n')
+
+        if len(tmp) < 2 or tmp[0] == '' or tmp[1] == '':
+            print "[-] Skipping %s due to missing fields" % (line)
             continue
 
         if len(tmp[1]) < 12:
-            print "[-] Skipping "+line.rstrip('\r\n')+" because its not a valid hash"
+            print "[-] Skipping %s because its not a valid hash" % (line)
             continue
 
-        HASHLIST[tmp[0]] = tmp[1].rstrip('\r\n')
+        HASHLIST[tmp[0]] = tmp[1]
 
     hashp.close()
     if HASHLIST == {}:
@@ -226,7 +232,7 @@ def usage():
     print "\t-p/--path      -- filesystem path to start the walk."
     print "\t-f/--file      -- file containing hashes in user:hash format"
     print "\t-e/--entropy   -- minimum entropy score. default:", ENTROPY
-    print "\t-m/--minlength -- minimum password length in bytes. default:",MINLENGTH
+    print "\t-m/--minlength -- minimum password length. default:", MINLENGTH
     print
     print "example: ./dave_navarros_goatee.py -p /home -f hashes.txt"
 
@@ -267,7 +273,7 @@ def main():
     populate_hashes(hashfile)
 
     print
-    print "[+] Walking filesystem starting at", path
+    print "[+] Walking filesystem starting at %s" % (path)
     print "[+] Press Control-C to stop the violence."
     print
 
