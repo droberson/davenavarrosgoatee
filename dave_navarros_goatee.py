@@ -11,7 +11,15 @@ This is currently very terrible and shouldnt be used.
 
 TODO:
 - add more hash types
--
+-- $id$salt$hash
+-- ids: 1=md5 2a=blowfish 5=sha256 6=sha512
+- convert getopt to argparse
+- add left->right, right->left function
+- LRU cache to minimize duplicate password attempts
+- add charset to use with analyze()
+- clean up print statements
+- different pattern for open()
+- add license
 """
 
 import os
