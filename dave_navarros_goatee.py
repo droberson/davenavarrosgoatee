@@ -9,6 +9,9 @@ anything else that is readable.
 This is currently very terrible and shouldnt be used.
 2/2017 -- Daniel Roberson
 
+TODO:
+- add more hash types
+-
 """
 
 import os
@@ -94,7 +97,6 @@ def analyze(filename):
                     print "[*] Found password for "+user+": "+word+" in "+filename
                     continue
             count += 1
-            # TODO more hash types
     print "[-] "+str(count)+" words attempted from "+filename
     filep.close()
 
@@ -186,10 +188,11 @@ def populate_hashes(hashfile):
 def usage():
     """Print program usage"""
     print sys.argv[0], "[-h/--help] [-p/--path <path>] -f <hashfile>"
-    print "\t-h/--help    -- prints this usage blurb"
-    print "\t-p/--path    -- filesystem path to start the walk."
-    print "\t-f/--file    -- file containing hashes in user:hash format"
-    print "\t-e/--entropy -- minimum entropy score. default:", ENTROPY
+    print "\t-h/--help      -- prints this usage blurb"
+    print "\t-p/--path      -- filesystem path to start the walk."
+    print "\t-f/--file      -- file containing hashes in user:hash format"
+    print "\t-e/--entropy   -- minimum entropy score. default:", ENTROPY
+    print "\t-m/--minlength -- minimum password length in bytes. default:",MINLENGTH
     print
     print "example: ./dave_navarros_goatee.py -p /home -f hashes.txt"
 
