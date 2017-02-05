@@ -110,7 +110,7 @@ def analyze(filename):
     count = 0
     wordlist = []
     filep = open(filename, 'r')
-    print "[-] Analyzing "+filename
+    print "[-] Analyzing %s" % (os.path.abspath(filename))
     for line in filep:
         if len(HASHLIST.keys()) == 0:
             break
@@ -126,10 +126,12 @@ def analyze(filename):
                 crypted = crypt.crypt(word, HASHLIST[user])
                 if crypted == HASHLIST[user]:
                     del HASHLIST[user]
-                    print "[*] Found password for "+user+": "+word+" in "+filename
+                    print "[*] Found password for %s: %s+ in %s" % \
+                        (user, word, os.path.abspath(filename))
                     continue
             count += 1
-    print "[-] "+str(count)+" words attempted from "+filename
+    print "[-] %s words attempted from %s" % \
+        (str(count), os.path.abspath(filename))
     filep.close()
 
 
