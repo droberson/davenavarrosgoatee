@@ -136,20 +136,25 @@ def analyze(filename):
     filep.close()
 
 
+def left_right_substrings(buf):
+    """Return substrings containing leftmost and rightmost characters.
+
+    For example, abc' returns:
+    ['a', 'ab', 'abc', 'c', 'cb']
+
+    Thanks to Michael Roberson for this function!
+    """
+    length = len(buf)
+    left_right = [buf[0:i+1] for i in xrange(length)]
+    right_left = [buf[-i:] for i in xrange(length)]
+    return list(set(left_right + right_left))
+
+
 def mutate(buf):
     """Generate a list of mutations from a buffer"""
-    wordlist = []
+    wordlist = [buf]
+    wordlist += left_right_substrings(buf)
 
-    tmpstr = ''
-    wordlist.append(buf) # add line itself
-    for character in buf: # left to right
-        tmpstr += character
-        wordlist.append(tmpstr)
-
-        tmpstr = ''
-    for character in reversed(buf): # right to left
-        tmpstr = character + tmpstr
-        wordlist.append(tmpstr)
     tokens = ''.join(set(buf))
 
     for omit_token in ALPHANUM:
@@ -158,14 +163,7 @@ def mutate(buf):
     for x in tokens:
         wordlist.extend(buf.split(x)) # add token itself
         for token in buf.split(x):
-            tmpstr = ''
-            for character in token: # left to right of token
-                tmpstr += character
-                wordlist.append(tmpstr)
-            tmpstr = ''
-            for character in reversed(token): # right to left of token
-                tmpstr = character + tmpstr
-                wordlist.append(tmpstr)
+            wordlist += left_right_substrings(token)
 
     # return unique list
     wordlist = list(set(wordlist))
