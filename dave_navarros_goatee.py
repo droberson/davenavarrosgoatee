@@ -257,6 +257,7 @@ def main():
     args = parser.parse_args()
 
     charsets = {"ALL": ALLCHARS, "ALPHA": ALPHAONLY, "ALPHANUM": ALPHANUM}
+    charset = charsets[args.charset]
 
     # parse hash file
     populate_hashes(args.hashfile)
@@ -270,7 +271,7 @@ def main():
         for filename in files:
             f = os.path.join(root, filename)
             if should_analyze(f) and len(HASHLIST):
-                analyze(f, args.minlength, args.entropy, args.charset)
+                analyze(f, args.minlength, args.entropy, charset)
 
     print "[+] The last Metroid is in captivity. The galaxy is at peace."
 
