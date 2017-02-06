@@ -108,9 +108,10 @@ def analyze(filename, minlength, entropy, charset):
     for line in filep:
         if len(HASHLIST.keys()) == 0:  # all hashes solved!
             break
-        if shannon_entropy(line.rstrip('\r\n'), charset) < entropy:
+        line = line.rstrip('\r\n')
+        if shannon_entropy(line, charset) < entropy:
             continue
-        wordlist = mutate(line.rstrip('\r\n'))
+        wordlist = mutate(line)
         for word in wordlist:
             if len(HASHLIST.keys()) == 0:  # all hashes solved!
                 break
@@ -159,6 +160,10 @@ def mutate(buf):
         wordlist.extend(buf.split(token))  # add token itself
         for sub_token in buf.split(token):
             wordlist += left_right_substrings(sub_token)
+
+    # strip leading and tailing whitespace
+    # TODO make this toggleable
+    wordlist = [s for s in wordlist if s.strip() == s]
 
     # return unique list
     return list(set(wordlist))
