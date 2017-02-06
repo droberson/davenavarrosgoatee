@@ -118,34 +118,35 @@ def shannon_entropy(data, charset):
 
 def analyze(filename, minlength, entropy, charset):
     """Try to find passwords in a file"""
-    word_count = 0
     word_list = []
     filep = open(filename, 'r')
-    print "[-] Analyzing %s" % (os.path.abspath(filename))
+
     for line in filep:
         if len(HASHLIST.keys()) == 0:  # all hashes solved!
-            break
+            filep.close()
+            return
         line = line.rstrip('\r\n')
         if shannon_entropy(line, charset) < entropy:
             continue
-        word_list = mutate(line)
-        for word in word_list:
-            if len(HASHLIST.keys()) == 0:  # all hashes solved!
-                break
-            if len(word) < minlength:
+        word_list += mutate(line)
+
+    word_list = list(set(word_list))
+    word_list = [s for s in word_list if len(s) >= minlength]
+
+    print "[-] Trying %s possible password combinations from %s" % \
+        (len(word_list), filename)
+
+    for word in word_list:
+        if len(HASHLIST.keys()) == 0:  # all hashes solved!
+            filep.close()
+            break
+        for user in HASHLIST.keys():
+            crypted = crypt.crypt(word, HASHLIST[user])
+            if crypted == HASHLIST[user]:
+                del HASHLIST[user]
+                print "[*] Found password for %s: %s in %s" % \
+                    (user, Color.bold_string(word), os.path.abspath(filename))
                 continue
-            for user in HASHLIST.keys():
-                crypted = crypt.crypt(word, HASHLIST[user])
-                if crypted == HASHLIST[user]:
-                    del HASHLIST[user]
-                    print "[*] Found password for %s: %s in %s" % \
-                        (user, Color.bold_string(word), os.path.abspath(filename))
-                    continue
-            word_count += 1
-    print "[-] %s words attempted from %s" % \
-        (str(word_count), os.path.abspath(filename))
-    print
-    filep.close()
 
 
 def left_right_substrings(buf):
@@ -233,6 +234,7 @@ def populate_hashes(hashfile):
             print "[-] Skipping %s because its not a valid hash" % (line)
             continue
 
+        # HASHLIST[username] = hash
         HASHLIST[hash_tokens[0]] = hash_tokens[1]
 
     hashp.close()
@@ -303,6 +305,7 @@ def main():
             if should_analyze(try_file) and len(HASHLIST):
                 analyze(try_file, args.minlength, args.entropy, charset)
 
+    print
     print "[+] The last Metroid is in captivity. The galaxy is at peace."
 
 
