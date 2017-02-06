@@ -216,24 +216,24 @@ def populate_hashes(hashfile):
     print "[+] Populating hash list from %s" % (hashfile)
 
     for line in hashp:
-        tmp = line.split(':')
+        hash_tokens = line.split(':')
 
-        if len(tmp) <= 1:
+        if len(hash_tokens) <= 1:
             continue
         # remove carriage returns and newlines
-        tmp[0] = tmp[0].rstrip('\r\n')
-        tmp[1] = tmp[1].rstrip('\r\n')
+        hash_tokens[0] = hash_tokens[0].rstrip('\r\n')
+        hash_tokens[1] = hash_tokens[1].rstrip('\r\n')
         line = line.rstrip('\r\n')
 
-        if len(tmp) < 2 or tmp[0] == '' or tmp[1] == '':
+        if hash_tokens[0] == '' or hash_tokens[1] == '':
             print "[-] Skipping %s due to missing fields" % (line)
             continue
 
-        if len(tmp[1]) < 12:
+        if len(hash_tokens[1]) < 12:
             print "[-] Skipping %s because its not a valid hash" % (line)
             continue
 
-        HASHLIST[tmp[0]] = tmp[1]
+        HASHLIST[hash_tokens[0]] = hash_tokens[1]
 
     hashp.close()
     if HASHLIST == {}:
