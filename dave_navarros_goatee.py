@@ -199,7 +199,7 @@ def populate_hashes(hashfile):
         tmp = line.split(':')
 
         if len(tmp) <= 1:
-            continue;
+            continue
         # remove carriage returns and newlines
         tmp[0] = tmp[0].rstrip('\r\n')
         tmp[1] = tmp[1].rstrip('\r\n')
