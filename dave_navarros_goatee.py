@@ -268,7 +268,8 @@ def main():
     print "[+] Press Control-C to stop the violence."
     print
 
-    for root, dirs, files in os.walk(args.path):
+    # I don't care about directories here, therefore _
+    for root, _, files in os.walk(args.path):
         for filename in files:
             f = os.path.join(root, filename)
             if should_analyze(f) and len(HASHLIST):
