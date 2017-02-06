@@ -48,7 +48,6 @@ import os
 import sys
 import stat
 import string
-import getopt
 import argparse
 import math
 import crypt
