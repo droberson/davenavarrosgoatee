@@ -106,13 +106,13 @@ def analyze(filename, minlength, entropy, charset):
     filep = open(filename, 'r')
     print "[-] Analyzing %s" % (os.path.abspath(filename))
     for line in filep:
-        if len(HASHLIST.keys()) == 0: # all hashes solved!
+        if len(HASHLIST.keys()) == 0:  # all hashes solved!
             break
         if shannon_entropy(line.rstrip('\r\n'), charset) < entropy:
             continue
         wordlist = mutate(line.rstrip('\r\n'))
         for word in wordlist:
-            if len(HASHLIST.keys()) == 0: # all hashes solved!
+            if len(HASHLIST.keys()) == 0:  # all hashes solved!
                 break
             if len(word) < minlength:
                 continue
@@ -151,17 +151,17 @@ def mutate(buf):
 
     tokens = ''.join(set(buf))
 
+    # don't use alphanumeric characters as tokens
     for omit_token in ALPHANUM:
         tokens = tokens.replace(omit_token, '')
 
     for token in tokens:
-        wordlist.extend(buf.split(token)) # add token itself
+        wordlist.extend(buf.split(token))  # add token itself
         for sub_token in buf.split(token):
             wordlist += left_right_substrings(sub_token)
 
     # return unique list
-    wordlist = list(set(wordlist))
-    return wordlist
+    return list(set(wordlist))
 
 
 def should_analyze(filename):
