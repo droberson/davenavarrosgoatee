@@ -17,6 +17,7 @@ TODO:
 - different pattern for open()
 - flag to generate wordlist only
 - flag to toggle whitespace in passwords
+- flag to enable/disable color output
 
 
 The MIT License
@@ -57,6 +58,23 @@ HASHLIST = {}
 ALPHAONLY = string.ascii_letters
 ALPHANUM = ALPHAONLY + string.digits
 ALLCHARS = ALPHANUM + string.punctuation
+
+# Terminal colors
+class Color(object):
+    """ANSI color code constants"""
+    BOLD = '\033[1m'
+    END = '\033[0m'
+
+    @staticmethod
+    def disable():
+        """Disable color output"""
+        Color.BOLD = ''
+        Color.END = ''
+
+
+def bold_string(buf):
+    """Print a string wrapped in bold ANSI codes"""
+    return Color.BOLD + buf + Color.END
 
 
 def is_binary(filename):
@@ -101,8 +119,8 @@ def shannon_entropy(data, charset):
 
 def analyze(filename, minlength, entropy, charset):
     """Try to find passwords in a file"""
-    count = 0
-    wordlist = []
+    word_count = 0
+    word_list = []
     filep = open(filename, 'r')
     print "[-] Analyzing %s" % (os.path.abspath(filename))
     for line in filep:
@@ -111,8 +129,8 @@ def analyze(filename, minlength, entropy, charset):
         line = line.rstrip('\r\n')
         if shannon_entropy(line, charset) < entropy:
             continue
-        wordlist = mutate(line)
-        for word in wordlist:
+        word_list = mutate(line)
+        for word in word_list:
             if len(HASHLIST.keys()) == 0:  # all hashes solved!
                 break
             if len(word) < minlength:
@@ -122,11 +140,11 @@ def analyze(filename, minlength, entropy, charset):
                 if crypted == HASHLIST[user]:
                     del HASHLIST[user]
                     print "[*] Found password for %s: %s in %s" % \
-                        (user, word, os.path.abspath(filename))
+                        (user, bold_string(word), os.path.abspath(filename))
                     continue
-            count += 1
+            word_count += 1
     print "[-] %s words attempted from %s" % \
-        (str(count), os.path.abspath(filename))
+        (str(word_count), os.path.abspath(filename))
     print
     filep.close()
 
@@ -147,8 +165,8 @@ def left_right_substrings(buf):
 
 def mutate(buf):
     """Generate a list of mutations from a buffer"""
-    wordlist = [buf]
-    wordlist += left_right_substrings(buf)
+    word_list = [buf]
+    word_list += left_right_substrings(buf)
 
     tokens = ''.join(set(buf))
 
@@ -157,16 +175,16 @@ def mutate(buf):
         tokens = tokens.replace(omit_token, '')
 
     for token in tokens:
-        wordlist.extend(buf.split(token))  # add token itself
+        word_list.extend(buf.split(token))  # add token itself
         for sub_token in buf.split(token):
-            wordlist += left_right_substrings(sub_token)
+            word_list += left_right_substrings(sub_token)
 
     # strip leading and tailing whitespace
     # TODO make this toggleable
-    wordlist = [s for s in wordlist if s.strip() == s]
+    word_list = [s for s in word_list if s.strip() == s]
 
     # return unique list
-    return list(set(wordlist))
+    return list(set(word_list))
 
 
 def should_analyze(filename):
@@ -256,10 +274,16 @@ def main():
                         choices=["ALL", "ALPHA", "ALPHANUM"],
                         default="ALL",
                         help="character set to use for entropy check")
+    parser.add_argument("--nocolor",
+                        action='store_true',
+                        help="disable color output")
     args = parser.parse_args()
 
     charsets = {"ALL": ALLCHARS, "ALPHA": ALPHAONLY, "ALPHANUM": ALPHANUM}
     charset = charsets[args.charset]
+
+    if args.nocolor:
+        Color.disable()
 
     if not os.path.isdir(args.path):
         print "[-] %s is not a directory. exiting." % (args.path)
