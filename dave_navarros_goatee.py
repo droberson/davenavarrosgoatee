@@ -71,10 +71,10 @@ class Color(object):
         Color.BOLD = ''
         Color.END = ''
 
-
-def bold_string(buf):
-    """Print a string wrapped in bold ANSI codes"""
-    return Color.BOLD + buf + Color.END
+    @staticmethod
+    def bold_string(buf):
+        """Print a string wrapped in bold ANSI codes"""
+        return Color.BOLD + buf + Color.END
 
 
 def is_binary(filename):
@@ -140,7 +140,7 @@ def analyze(filename, minlength, entropy, charset):
                 if crypted == HASHLIST[user]:
                     del HASHLIST[user]
                     print "[*] Found password for %s: %s in %s" % \
-                        (user, bold_string(word), os.path.abspath(filename))
+                        (user, Color.bold_string(word), os.path.abspath(filename))
                     continue
             word_count += 1
     print "[-] %s words attempted from %s" % \
