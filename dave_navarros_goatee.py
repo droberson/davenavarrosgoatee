@@ -19,6 +19,7 @@ TODO:
 - different pattern for open()
 - flag to generate wordlist only
 - check if -p exists
+- flag to toggle whitespace in passwords
 """
 
 """
