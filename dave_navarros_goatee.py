@@ -17,9 +17,8 @@ TODO:
 - different pattern for open()
 - flag to generate wordlist only
 - flag to toggle whitespace in passwords
-"""
 
-"""
+
 The MIT License
 
 Copyright (c) 2017 Daniel Roberson
