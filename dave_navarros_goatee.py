@@ -13,7 +13,6 @@ TODO:
 - add more hash types
 -- $id$salt$hash
 -- ids: 1=md5 2a=blowfish 5=sha256 6=sha512
-- convert getopt to argparse
 - LRU cache to minimize duplicate password attempts
 - add charset to use with analyze()
 - different pattern for open()
@@ -51,13 +50,12 @@ import sys
 import stat
 import string
 import getopt
+import argparse
 import math
 import crypt
 
 # Globals
 HASHLIST = {}
-ENTROPY = 2.0 # minimum entropy
-MINLENGTH = 6 # minimum password length
 
 # Constants
 ALPHAONLY = string.ascii_letters
@@ -105,7 +103,7 @@ def shannon_entropy(data, iterator):
     return entropy
 
 
-def analyze(filename):
+def analyze(filename, minlength, entropy):
     """Try to find passwords in a file"""
     count = 0
     wordlist = []
@@ -114,13 +112,13 @@ def analyze(filename):
     for line in filep:
         if len(HASHLIST.keys()) == 0:
             break
-        if shannon_entropy(line.rstrip('\r\n'), ALLCHARS) < ENTROPY:
+        if shannon_entropy(line.rstrip('\r\n'), ALLCHARS) < entropy:
             continue
         wordlist = mutate(line.rstrip('\r\n'))
         for word in wordlist:
             if len(HASHLIST.keys()) == 0:
                 break
-            if len(word) < MINLENGTH:
+            if len(word) < minlength:
                 continue
             for user in HASHLIST.keys():
                 crypted = crypt.crypt(word, HASHLIST[user])
@@ -202,6 +200,8 @@ def populate_hashes(hashfile):
     for line in hashp:
         tmp = line.split(':')
 
+        if len(tmp) <= 1:
+            continue;
         # remove carriage returns and newlines
         tmp[0] = tmp[0].rstrip('\r\n')
         tmp[1] = tmp[1].rstrip('\r\n')
@@ -223,65 +223,47 @@ def populate_hashes(hashfile):
         sys.exit(os.EX_USAGE)
 
 
-def usage():
-    """Print program usage"""
-    print sys.argv[0], "[-h/--help] [-p/--path <path>] -f <hashfile>"
-    print "\t-h/--help      -- prints this usage blurb"
-    print "\t-p/--path      -- filesystem path to start the walk."
-    print "\t-f/--file      -- file containing hashes in user:hash format"
-    print "\t-e/--entropy   -- minimum entropy score. default:", ENTROPY
-    print "\t-m/--minlength -- minimum password length. default:", MINLENGTH
-    print
-    print "example: ./dave_navarros_goatee.py -p /home -f hashes.txt"
-
-
 def main():
     """dave_navarros_goatee.py entry point"""
-    global ENTROPY
-    global MINLENGTH
-    ENTROPY = 2.0
-    MINLENGTH = 6
-    hashfile = ''
-    path = "/"
 
     print "[+] dave_navarros_goatee.py -- by Daniel Roberson"
     print
 
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "-hp:f:e:m:", ["help", "path=", "file=", "entropy=", "minlength="])
-    except getopt.GetoptError as err:
-        print str(err)
-        usage()
-        sys.exit(os.EX_USAGE)
-    for option, arg in opts:
-        if option in ("-h", "--help"):
-            usage()
-            sys.exit(os.EX_USAGE)
-        elif option in ("-p", "--path"):
-            path = arg
-        elif option in ("-f", "--file"):
-            hashfile = arg
-        elif option in ("-e", "--entropy"):
-            ENTROPY = float(arg)
-        elif option in ("-m", "--minlength"):
-            MINLENGTH = int(arg)
-        else:
-            assert False, "Unhandled option"
-
-    populate_hashes(hashfile)
+    description = "example: ./dave_navarros_goatee.py -p /home -f hashes.txt"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("-p",
+                        "--path",
+                        default="/",
+                        help="starting filesystem location")
+    parser.add_argument("-f",
+                        "--hashfile",
+                        default="",
+                        help="file containing hashes in user:hash format")
+    parser.add_argument("-e",
+                        "--entropy",
+                        type=float,
+                        default=2.0,
+                        help="minimum Shannon entropy")
+    parser.add_argument("-m",
+                        "--minlength",
+                        type=int,
+                        default=6,
+                        help="minimum password length")
+    args = parser.parse_args()
+    
+    populate_hashes(args.hashfile)
 
     print
-    print "[+] Walking filesystem starting at %s" % (path)
+    print "[+] Walking filesystem starting at %s" % (args.path)
     print "[+] Press Control-C to stop the violence."
     print
 
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(args.path):
         for filename in files:
             f = os.path.join(root, filename)
             if should_analyze(f) and len(HASHLIST):
-                analyze(f)
+                analyze(f, args.minlength, args.entropy)
 
-    print
     print "[+] The last Metroid is in captivity. The galaxy is at peace."
 
 
