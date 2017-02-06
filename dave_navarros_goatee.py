@@ -14,7 +14,6 @@ TODO:
 -- $id$salt$hash
 -- ids: 1=md5 2a=blowfish 5=sha256 6=sha512
 - LRU cache to minimize duplicate password attempts
-- add charset to use with analyze()
 - different pattern for open()
 - flag to generate wordlist only
 - check if -p exists
@@ -82,7 +81,7 @@ def is_binary(filename):
     return False
 
 
-def shannon_entropy(data, iterator):
+def shannon_entropy(data, charset):
     """Calculate entropy of a string using the Shannon Algorithm
 
     Claude Shannon looks like he could have commanded the Death Star.
@@ -96,14 +95,14 @@ def shannon_entropy(data, iterator):
     if not data:
         return 0
     entropy = 0
-    for x in (ord(c) for c in iterator):
+    for x in (ord(c) for c in charset):
         p_x = float(data.count(chr(x))) / len(data)
         if p_x > 0:
             entropy += - p_x * math.log(p_x, 2)
     return entropy
 
 
-def analyze(filename, minlength, entropy):
+def analyze(filename, minlength, entropy, charset):
     """Try to find passwords in a file"""
     count = 0
     wordlist = []
@@ -112,7 +111,7 @@ def analyze(filename, minlength, entropy):
     for line in filep:
         if len(HASHLIST.keys()) == 0:
             break
-        if shannon_entropy(line.rstrip('\r\n'), ALLCHARS) < entropy:
+        if shannon_entropy(line.rstrip('\r\n'), charset) < entropy:
             continue
         wordlist = mutate(line.rstrip('\r\n'))
         for word in wordlist:
@@ -229,6 +228,7 @@ def main():
     print "[+] dave_navarros_goatee.py -- by Daniel Roberson"
     print
 
+    # parse CLI arguments
     description = "example: ./dave_navarros_goatee.py -p /home -f hashes.txt"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-p",
@@ -249,8 +249,16 @@ def main():
                         type=int,
                         default=6,
                         help="minimum password length")
+    parser.add_argument("-c",
+                        "--charset",
+                        choices=["ALL", "ALPHA", "ALPHANUM"],
+                        default="ALL",
+                        help="character set to use for entropy check")
     args = parser.parse_args()
-    
+
+    charsets = {"ALL": ALLCHARS, "ALPHA": ALPHAONLY, "ALPHANUM": ALPHANUM}
+
+    # parse hash file
     populate_hashes(args.hashfile)
 
     print
@@ -262,7 +270,7 @@ def main():
         for filename in files:
             f = os.path.join(root, filename)
             if should_analyze(f) and len(HASHLIST):
-                analyze(f, args.minlength, args.entropy)
+                analyze(f, args.minlength, args.entropy, args.charset)
 
     print "[+] The last Metroid is in captivity. The galaxy is at peace."
 
