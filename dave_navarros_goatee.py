@@ -16,7 +16,6 @@ TODO:
 - LRU cache to minimize duplicate password attempts
 - different pattern for open()
 - flag to generate wordlist only
-- check if -p exists
 - flag to toggle whitespace in passwords
 """
 
@@ -257,6 +256,10 @@ def main():
 
     charsets = {"ALL": ALLCHARS, "ALPHA": ALPHAONLY, "ALPHANUM": ALPHANUM}
     charset = charsets[args.charset]
+
+    if not os.path.isdir(args.path):
+        print "[-] %s is not a directory. exiting." % (args.path)
+        sys.exit(os.EX_USAGE)
 
     # parse hash file
     populate_hashes(args.hashfile)
