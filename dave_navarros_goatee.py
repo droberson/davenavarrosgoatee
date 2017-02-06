@@ -17,7 +17,6 @@ TODO:
 - different pattern for open()
 - flag to generate wordlist only
 - flag to toggle whitespace in passwords
-- flag to enable/disable color output
 
 
 The MIT License
@@ -61,7 +60,7 @@ ALLCHARS = ALPHANUM + string.punctuation
 
 # Terminal colors
 class Color(object):
-    """ANSI color code constants"""
+    """ANSI color code constants and functions"""
     BOLD = '\033[1m'
     END = '\033[0m'
 
@@ -73,7 +72,7 @@ class Color(object):
 
     @staticmethod
     def bold_string(buf):
-        """Print a string wrapped in bold ANSI codes"""
+        """Return a string wrapped in bold ANSI codes"""
         return Color.BOLD + buf + Color.END
 
 
