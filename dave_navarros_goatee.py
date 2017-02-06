@@ -67,7 +67,7 @@ def is_binary(filename):
         while 1:
             try:
                 chunk = binary.read(1024)
-            except:
+            except Exception:
                 return False
             if '\0' in chunk:
                 return True
@@ -92,8 +92,8 @@ def shannon_entropy(data, charset):
     if not data:
         return 0
     entropy = 0
-    for x in (ord(c) for c in charset):
-        p_x = float(data.count(chr(x))) / len(data)
+    for byte in (ord(c) for c in charset):
+        p_x = float(data.count(chr(byte))) / len(data)
         if p_x > 0:
             entropy += - p_x * math.log(p_x, 2)
     return entropy
@@ -106,13 +106,13 @@ def analyze(filename, minlength, entropy, charset):
     filep = open(filename, 'r')
     print "[-] Analyzing %s" % (os.path.abspath(filename))
     for line in filep:
-        if len(HASHLIST.keys()) == 0:
+        if len(HASHLIST.keys()) == 0: # all hashes solved!
             break
         if shannon_entropy(line.rstrip('\r\n'), charset) < entropy:
             continue
         wordlist = mutate(line.rstrip('\r\n'))
         for word in wordlist:
-            if len(HASHLIST.keys()) == 0:
+            if len(HASHLIST.keys()) == 0: # all hashes solved!
                 break
             if len(word) < minlength:
                 continue
@@ -154,10 +154,10 @@ def mutate(buf):
     for omit_token in ALPHANUM:
         tokens = tokens.replace(omit_token, '')
 
-    for x in tokens:
-        wordlist.extend(buf.split(x)) # add token itself
-        for token in buf.split(x):
-            wordlist += left_right_substrings(token)
+    for token in tokens:
+        wordlist.extend(buf.split(token)) # add token itself
+        for sub_token in buf.split(token):
+            wordlist += left_right_substrings(sub_token)
 
     # return unique list
     wordlist = list(set(wordlist))
@@ -169,7 +169,7 @@ def should_analyze(filename):
     try:
         filep = open(filename, 'r')
         filep.close()
-    except:
+    except Exception:
         return False
     return os.access(filename, os.R_OK) \
         and stat.S_ISREG(os.stat(filename).st_mode) \
@@ -271,9 +271,9 @@ def main():
     # I don't care about directories here, therefore _
     for root, _, files in os.walk(args.path):
         for filename in files:
-            f = os.path.join(root, filename)
-            if should_analyze(f) and len(HASHLIST):
-                analyze(f, args.minlength, args.entropy, charset)
+            try_file = os.path.join(root, filename)
+            if should_analyze(try_file) and len(HASHLIST):
+                analyze(try_file, args.minlength, args.entropy, charset)
 
     print "[+] The last Metroid is in captivity. The galaxy is at peace."
 
