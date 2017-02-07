@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-"""dave_navarros_goatee
+"""
+dave_navarros_goatee.py
 
 This attempts to discover potential passwords leaked to the filesystem
 via chat and program logs, shell histories, configuration files, and
@@ -156,7 +157,6 @@ def analyze(filename, minlength, entropy, charset):
                 print "[*] Found password for %s: %s in %s" % \
                     (user, Color.bold_string(word), os.path.abspath(filename))
                 continue
-
 
 
 def left_right_substrings(buf):
