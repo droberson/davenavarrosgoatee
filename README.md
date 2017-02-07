@@ -35,3 +35,21 @@ To reduce CPU cost, you can specify minimum password lengths to try and
 have the option to skip lines that do not score above a threshold met by
 using Claude Shannon's entropy algorithm. I am currently exploring ways to
 reduce duplicated combinations and to speed the process up.
+
+## Example usages:
+
+### Crack /etc/shadow using contents of /home/daniel
+```
+./dave_navarros_goatee.py --path /home/daniel --hashfile /etc/shadow --minlength 8
+```
+
+### Generate wordlist from contents of /var/log
+```
+./dave_navarros_goatee.py --path /var/log --stdout >wordlist.txt
+```
+
+### Pipe output to John the Ripper
+```
+./dave_navarros_goatee.py --path /home --stdout | john --pipe --rules hashfile
+```
+~
