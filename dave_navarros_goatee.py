@@ -16,11 +16,10 @@ TODO:
 -- ids: 1=md5 2a=blowfish 5=sha256 6=sha512
 - LRU cache to minimize duplicate password attempts
 - different pattern for open()
-- flag to generate wordlist only
--- stdout option (for stdin with JtR)
 - flag to toggle whitespace in passwords
 - threading
 - support for a single file
+- exclude files over a certain size
 - save progress somehow to restart.
 
 The MIT License
@@ -53,10 +52,12 @@ import string
 import argparse
 import math
 import crypt
-import time, datetime
+import time
+import datetime
 
 # Globals
 HASHLIST = {}
+QUIET = False
 
 # Constants
 ALPHAONLY = string.ascii_letters
@@ -79,6 +80,12 @@ class Color(object):
     def bold_string(buf):
         """Return a string wrapped in bold ANSI codes"""
         return Color.BOLD + buf + Color.END
+
+
+def xprint(buf):
+    """Do not print if QUIET is set"""
+    if not QUIET:
+        print buf
 
 
 def is_binary(filename):
@@ -144,8 +151,13 @@ def analyze(filename, minlength, entropy, charset):
     word_list = list(set(word_list))
     word_list = [s for s in word_list if len(s) >= minlength]
 
-    print "[-] Trying %s possible password combinations from %s" % \
-        (len(word_list), filename)
+    xprint("[-] Trying %s possible password combinations from %s" % \
+        (len(word_list), filename))
+
+    if QUIET:
+        for word in word_list:
+            print word
+        return
 
     for word in word_list:
         if len(HASHLIST.keys()) == 0:  # all hashes solved!
@@ -154,8 +166,8 @@ def analyze(filename, minlength, entropy, charset):
         for user in HASHLIST.keys():
             if try_hash(word, HASHLIST[user]):
                 del HASHLIST[user]
-                print "[*] Found password for %s: %s in %s" % \
-                    (user, Color.bold_string(word), os.path.abspath(filename))
+                xprint("[*] Found password for %s: %s in %s" % \
+                    (user, Color.bold_string(word), os.path.abspath(filename)))
                 continue
 
 
@@ -216,15 +228,15 @@ def populate_hashes(hashfile):
     HASHLIST = {}
 
     if hashfile == '':
-        print "[-] Must specify a hash file with -f/--file"
+        xprint("[-] Must specify a hash file with -f/--file")
         sys.exit(os.EX_USAGE)
     try:
         hashp = open(hashfile, 'r')
     except Exception, err:
-        print "[-] Could not open hashfile: %s" % (str(err))
+        xprint("[-] Could not open hashfile: %s" % (str(err)))
         sys.exit(os.EX_USAGE)
 
-    print "[+] Populating hash list from %s" % (hashfile)
+    xprint("[+] Populating hash list from %s" % (hashfile))
 
     for line in hashp:
         hash_tokens = line.split(':')
@@ -237,11 +249,11 @@ def populate_hashes(hashfile):
         line = line.rstrip('\r\n')
 
         if hash_tokens[0] == '' or hash_tokens[1] == '':
-            print "[-] Skipping %s due to missing fields" % (line)
+            xprint("[-] Skipping %s due to missing fields" % (line))
             continue
 
         if len(hash_tokens[1]) < 12:
-            print "[-] Skipping %s because its not a valid hash" % (line)
+            xprint("[-] Skipping %s because its not a valid hash" % (line))
             continue
 
         # HASHLIST[username] = hash
@@ -249,15 +261,13 @@ def populate_hashes(hashfile):
 
     hashp.close()
     if HASHLIST == {}:
-        print "[-] Empty hash list. Exiting"
+        xprint("[-] Empty hash list. Exiting")
         sys.exit(os.EX_USAGE)
 
 
 def main():
     """dave_navarros_goatee.py entry point"""
-
-    print "[+] dave_navarros_goatee.py -- by Daniel Roberson"
-    print
+    global QUIET
 
     # parse CLI arguments
     description = "example: ./dave_navarros_goatee.py -p /home -f hashes.txt"
@@ -288,25 +298,32 @@ def main():
     parser.add_argument("--nocolor",
                         action='store_true',
                         help="disable color output")
+    parser.add_argument("--stdout",
+                        action='store_true',
+                        help="output words one per line, but do not crack")
     args = parser.parse_args()
 
     charsets = {"ALL": ALLCHARS, "ALPHA": ALPHAONLY, "ALPHANUM": ALPHANUM}
     charset = charsets[args.charset]
 
+    if args.stdout:
+        QUIET = True
+
     if args.nocolor:
         Color.disable()
 
+    xprint("[+] dave_navarros_goatee.py -- by Daniel Roberson\n")
+
     if not os.path.isdir(args.path):
-        print "[-] %s is not a directory. exiting." % (args.path)
+        xprint("[-] %s is not a directory. exiting." % (args.path))
         sys.exit(os.EX_USAGE)
 
     # parse hash file
-    populate_hashes(args.hashfile)
+    if not QUIET:
+        populate_hashes(args.hashfile)
 
-    print
-    print "[+] Walking filesystem starting at %s" % (args.path)
-    print "[+] Press Control-C to stop the violence."
-    print
+    xprint("\n[+] Walking filesystem starting at %s" % (args.path))
+    xprint("[+] Press Control-C to stop the violence.\n")
 
     start_time = time.time()
 
@@ -314,13 +331,12 @@ def main():
     for root, _, files in os.walk(args.path):
         for filename in files:
             try_file = os.path.join(root, filename)
-            if should_analyze(try_file) and len(HASHLIST):
+            if should_analyze(try_file) and (len(HASHLIST) or QUIET):
                 analyze(try_file, args.minlength, args.entropy, charset)
 
-    print
-    print "[+] The last Metroid is in captivity. The galaxy is at peace."
-    print "[+] Elapsed time: %s" % \
-        (str(datetime.timedelta(seconds=time.time() - start_time)))
+    xprint("\n[+] The last Metroid is in captivity. The galaxy is at peace.")
+    xprint("[+] Elapsed time: %s" % \
+        (str(datetime.timedelta(seconds=time.time() - start_time))))
 
 if __name__ == "__main__":
     main()
