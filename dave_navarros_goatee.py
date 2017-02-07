@@ -16,9 +16,11 @@ TODO:
 - LRU cache to minimize duplicate password attempts
 - different pattern for open()
 - flag to generate wordlist only
+-- stdout option (for stdin with JtR)
 - flag to toggle whitespace in passwords
 - threading
-
+- support for a single file
+- save progress somehow to restart.
 
 The MIT License
 
@@ -50,6 +52,7 @@ import string
 import argparse
 import math
 import crypt
+import time, datetime
 
 # Globals
 HASHLIST = {}
@@ -299,6 +302,8 @@ def main():
     print "[+] Press Control-C to stop the violence."
     print
 
+    start_time = time.time()
+
     # I don't care about directories here, therefore _
     for root, _, files in os.walk(args.path):
         for filename in files:
@@ -308,7 +313,8 @@ def main():
 
     print
     print "[+] The last Metroid is in captivity. The galaxy is at peace."
-
+    print "[+] Elapsed time: %s" % \
+        (str(datetime.timedelta(seconds=time.time() - start_time)))
 
 if __name__ == "__main__":
     main()
