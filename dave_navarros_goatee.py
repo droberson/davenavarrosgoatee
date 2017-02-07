@@ -53,8 +53,6 @@ import argparse
 import math
 import crypt
 import time, datetime
-from Queue import Queue
-from threading import Thread
 
 # Globals
 HASHLIST = {}
@@ -141,6 +139,7 @@ def analyze(filename, minlength, entropy, charset):
             continue
         word_list += mutate(line)
 
+    # sort, unique, and remove short passwords from word_list
     word_list = list(set(word_list))
     word_list = [s for s in word_list if len(s) >= minlength]
 
@@ -157,6 +156,7 @@ def analyze(filename, minlength, entropy, charset):
                 print "[*] Found password for %s: %s in %s" % \
                     (user, Color.bold_string(word), os.path.abspath(filename))
                 continue
+
 
 
 def left_right_substrings(buf):
