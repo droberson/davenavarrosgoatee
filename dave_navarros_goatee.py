@@ -53,6 +53,8 @@ import argparse
 import math
 import crypt
 import time, datetime
+from Queue import Queue
+from threading import Thread
 
 # Globals
 HASHLIST = {}
@@ -120,15 +122,20 @@ def shannon_entropy(data, charset):
     return entropy
 
 
+def try_hash(password, hashed):
+    """Determine if password matches a hash"""
+    crypted = crypt.crypt(password, hashed)
+    if crypted == hashed:
+        return True
+    return False
+
+
 def analyze(filename, minlength, entropy, charset):
     """Try to find passwords in a file"""
     word_list = []
     filep = open(filename, 'r')
 
     for line in filep:
-        if len(HASHLIST.keys()) == 0:  # all hashes solved!
-            filep.close()
-            return
         line = line.rstrip('\r\n')
         if shannon_entropy(line, charset) < entropy:
             continue
@@ -145,8 +152,7 @@ def analyze(filename, minlength, entropy, charset):
             filep.close()
             break
         for user in HASHLIST.keys():
-            crypted = crypt.crypt(word, HASHLIST[user])
-            if crypted == HASHLIST[user]:
+            if try_hash(word, HASHLIST[user]):
                 del HASHLIST[user]
                 print "[*] Found password for %s: %s in %s" % \
                     (user, Color.bold_string(word), os.path.abspath(filename))
