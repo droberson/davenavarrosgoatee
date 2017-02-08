@@ -1,5 +1,6 @@
 # Dave Navarro's Goatee
 
+```
               .                                                        
            b   A           Here's some ASCII art of a tribal dragon    
            $b  Vb.              that I found on the Internet to set    
@@ -57,6 +58,7 @@ I"  $P"$."$$b. "*$.    "**$$$$$*"*$$$$$$$"
                      I'                                                
                      '                                                 
 
+```
 
 ## Overview
 
