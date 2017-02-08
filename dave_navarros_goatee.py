@@ -47,6 +47,7 @@ THE SOFTWARE.
 
 import os
 import sys
+import re
 import stat
 import string
 import argparse
@@ -105,6 +106,32 @@ def is_binary(filename):
     finally:
         binary.close()
     return False
+
+
+def human_to_bytes(number):
+    """
+    Convert string into number of bytes (ex: "4K" => 4096)
+
+    Returns None if its a bad pattern, number of bytes otherwise
+    """
+    units = ["b", "k", "m", "g", "t"]
+
+    # matches <number><one character>
+    match = re.match(r"([0-9]+)([a-z])\b", number, re.I)
+
+    if not match:
+        return None
+
+    number = match.groups()[0]
+    unit = match.groups()[1].lower()
+
+    try:
+        multiplier = units.index(unit)
+    except ValueError:
+        return None
+
+    multiplier = 1 << multiplier * 10
+    return int(number) * multiplier
 
 
 def shannon_entropy(data, charset):
@@ -209,8 +236,9 @@ def mutate(buf):
     return list(set(word_list))
 
 
-def should_analyze(filename):
+def should_analyze(filename, maxsize):
     """Determine if filename is worth exploring"""
+    # TODO: display WHY this program isn't analyzing files?
     try:
         filep = open(filename, 'r')
         filep.close()
@@ -219,7 +247,8 @@ def should_analyze(filename):
     return os.access(filename, os.R_OK) \
         and stat.S_ISREG(os.stat(filename).st_mode) \
         and not os.path.islink(filename) \
-        and not is_binary(filename)
+        and not is_binary(filename) \
+        and os.path.getsize(filename) <= int(maxsize)
 
 
 def populate_hashes(hashfile):
@@ -301,6 +330,9 @@ def main():
     parser.add_argument("--stdout",
                         action='store_true',
                         help="output words one per line, but do not crack")
+    parser.add_argument("--maxsize",
+                        default="1M",
+                        help="maximum size of files to check in bytes (ex: 4k, 1M)")
     args = parser.parse_args()
 
     charsets = {"ALL": ALLCHARS, "ALPHA": ALPHAONLY, "ALPHANUM": ALPHANUM}
@@ -318,6 +350,13 @@ def main():
         xprint("[-] %s is not a directory. exiting." % (args.path))
         sys.exit(os.EX_USAGE)
 
+    if args.maxsize:
+        file_size = human_to_bytes(args.maxsize)
+        if file_size is None:
+            xprint("[-] Invalid size: \"%s\" Must be in this format: 100b, 4k, 2m, 1g" % \
+                args.maxsize)
+            sys.exit(os.EX_USAGE)
+
     # parse hash file
     if not QUIET:
         populate_hashes(args.hashfile)
@@ -331,7 +370,7 @@ def main():
     for root, _, files in os.walk(args.path):
         for filename in files:
             try_file = os.path.join(root, filename)
-            if should_analyze(try_file) and (len(HASHLIST) or QUIET):
+            if should_analyze(try_file, file_size) and (len(HASHLIST) or QUIET):
                 analyze(try_file, args.minlength, args.entropy, charset)
 
     xprint("\n[+] The last Metroid is in captivity. The galaxy is at peace.")
