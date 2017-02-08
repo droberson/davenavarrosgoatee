@@ -19,8 +19,8 @@ TODO:
 - flag to toggle whitespace in passwords
 - threading
 - support for a single file
-- exclude files over a certain size
-- save progress somehow to restart.
+- show WHY files aren't being analyzed?
+- save progress somehow to restart on bigger jobs.
 
 The MIT License
 
