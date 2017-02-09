@@ -19,6 +19,8 @@ TODO:
 - flag to toggle whitespace in passwords
 - threading
 - support for a single file
+- `strings` binaries (potentially find stuff in different filetypes than plaintext)
+- if a file is bigger than X bytes, analyze line by line rather than by entire file.
 - show WHY files aren't being analyzed?
 - save progress somehow to restart on bigger jobs.
 
