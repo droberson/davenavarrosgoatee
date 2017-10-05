@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 dave_navarros_goatee.py
@@ -88,7 +88,7 @@ class Color(object):
 def xprint(buf):
     """Do not print if QUIET is set"""
     if not QUIET:
-        print buf
+        print(buf)
 
 
 def is_binary(filename):
@@ -101,7 +101,7 @@ def is_binary(filename):
                 chunk = binary.read(1024)
             except Exception:
                 return False
-            if '\0' in chunk:
+            if b'\0' in chunk:
                 return True
             if len(chunk) < 1024:
                 break
@@ -185,14 +185,14 @@ def analyze(filename, minlength, entropy, charset):
 
     if QUIET:
         for word in word_list:
-            print word
+            print(word)
         return
 
     for word in word_list:
-        if len(HASHLIST.keys()) == 0:  # all hashes solved!
+        if len(list(HASHLIST.keys())) == 0:  # all hashes solved!
             filep.close()
             break
-        for user in HASHLIST.keys():
+        for user in list(HASHLIST.keys()):
             if try_hash(word, HASHLIST[user]):
                 del HASHLIST[user]
                 xprint("[*] Found password for %s: %s in %s" % \
@@ -209,8 +209,8 @@ def left_right_substrings(buf):
     Thanks to Michael Roberson for this function!
     """
     length = len(buf)
-    left_right = [buf[0:i+1] for i in xrange(length)]
-    right_left = [buf[-i:] for i in xrange(length)]
+    left_right = [buf[0:i+1] for i in range(length)]
+    right_left = [buf[-i:] for i in range(length)]
     return list(set(left_right + right_left))
 
 
@@ -263,7 +263,7 @@ def populate_hashes(hashfile):
         sys.exit(os.EX_USAGE)
     try:
         hashp = open(hashfile, 'r')
-    except Exception, err:
+    except Exception as err:
         xprint("[-] Could not open hashfile: %s" % (str(err)))
         sys.exit(os.EX_USAGE)
 
